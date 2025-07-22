@@ -1,3 +1,0 @@
-gradio
-bcrypt
-pandas
