@@ -1,0 +1,88 @@
+docker build -t ragbot .
+docker run -d -p 8000:8000 --env-file .env --name rag_container ragbot
+
+docker exec -it rag_container python test_vector_search.py
+
+
+
+uvicorn main:app --host 0.0.0.0 --port 8000 --workers 4
+
+
+
+
+
+Azure
+az login
+
+az group create --name rag-chatbot-rg --location eastus
+az vm create --resource-group rag-chatbot-rg --name rag-vm --image UbuntuLTS --admin-username azureuser --generate-ssh-keys --size Standard_DS2_v2 --output json
+
+az disk create --resource-group rag-chatbot-rg --name rag-disk --size-gb 20 --sku Premium_LRS
+az vm disk attach --resource-group rag-chatbot-rg --vm-name rag-vm --name rag-disk
+
+az vm show -d -g rag-chatbot-rg -n rag-vm --query publicIps -o tsv
+scp -r .\rag_chatbot\ azureuser@<your_vm_ip>:/home/azureuser/rag_chatbot
+scp -i /path/to/private-key.pem .\rag_chatbot\ username@remote-host:/username/rag_chatbot
+
+
+scp -r -i ./rag_chatbot azureuser@$(az vm show -d -g rag-chatbot-rg -n rag-vm --query publicIps -o tsv):/home/azureuser/rag_chatbot
+
+az vm open-port --port 8000 --resource-group rag-chatbot-rg --name rag-vm
+
+ssh azureuser@<your_vm_ip>
+sudo apt-get update
+sudo apt-get install -y docker.io
+
+cd /home/azureuser/rag_chatbot
+
+docker build -t ragbot .
+docker run -d -p 8000:8000 -v /mnt/azuredata:/mnt/azuredata -e PERSIST_DIR=/mnt/azuredata --name rag_container ragbot
+
+docker ps
+
+
+
+Azure Free
+az login
+
+az group create --name rag-chatbot-rg --location eastus
+az vm create --resource-group rag-chatbot-rg --name rag-vm --image UbuntuLTS --admin-username azureuser --generate-ssh-keys --size Standard_B1s --output json
+
+az vm show -d -g rag-chatbot-rg -n rag-vm --query publicIps -o tsv
+scp -r .\rag_chatbot\ azureuser@<your_vm_ip>:/home/azureuser/rag_chatbot
+
+scp -r ./rag_chatbot azureuser@$(az vm show -d -g rag-chatbot-rg -n rag-vm --query publicIps -o tsv):/home/azureuser/rag_chatbot
+
+az vm open-port --port 8000 --resource-group rag-chatbot-rg --name rag-vm
+
+ssh azureuser@<your_vm_ip>
+sudo apt-get update
+sudo apt-get install -y docker.io
+
+cd /home/azureuser/rag_chatbot
+
+docker build -t ragbot .
+docker run -d -p 8000:8000 -e PERSIST_DIR=/home/azureuser/rag_chatbot/data --name rag_container ragbot
+
+docker ps
+
+192.168.14.131
+
+
+
+# Take auto mount disk even though after VM restarting.
+
+sudo blkid /dev/sdc1
+# Print will be UUID="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
+sudo nano /etc/fstab
+
+UUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx  /mnt/azuredata  ext4  defaults,nofail  0  2
+
+sudo mount -a
+
+
+
+sudo chown -R azureuser:azureuser /mnt/azuredata
+sudo chmod -R 775 /mnt/azuredata
+docker restart rag-container

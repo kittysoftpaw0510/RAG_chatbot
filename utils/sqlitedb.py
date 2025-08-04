@@ -170,4 +170,5 @@ def delete_ingested_pdf_by_id(id: str):
 
 ######################################
 
-init_db() 
+if __name__ == "__main__":
+    init_db() 

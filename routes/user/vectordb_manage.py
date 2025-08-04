@@ -32,7 +32,7 @@ def ingest_by_filename(filename: str, credentials: HTTPBasicCredentials = Depend
 @router.delete("/user/vectordb/pdf/one/{filename}")
 def remove_pdf_data(filename: str, credentials: HTTPBasicCredentials = Depends(verify_user_credentials)):
     try:
-        vectordb.clear_pdf_by_source(filename, credentials.username)
+        vectordb.clear_pdf_by_source_userid(filename, credentials.username)
         log_event(credentials.username, "user_remove_pdf_data", f"filename={filename}")
         return {"detail": f"PDF data for '{filename}' removed from vectordb."}
     except Exception as e:

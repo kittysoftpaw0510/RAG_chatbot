@@ -172,6 +172,27 @@ def clear_pdf_by_source(source_name):
     if ids_to_delete:
         db.delete(ids=ids_to_delete)
 
+def clear_pdf_by_source_userid(source_name, user_id):
+    """
+    Delete all vector chunks for a given PDF source that belong to the specified user.
+    Only deletes chunks where both source (or filename) and user_id match.
+    For public PDFs, only deletes the user's own ingested copy.
+    """
+    db = Chroma(
+        persist_directory=CHROMA_PDF_DIR,
+        embedding_function=embedding
+    )
+    all_docs = db.get()
+    ids_to_delete = []
+    for i, meta in enumerate(all_docs["metadatas"]):
+        if (
+            (meta.get("source") == source_name or meta.get("filename") == source_name)
+            and meta.get("user_id") == user_id
+        ):
+            ids_to_delete.append(all_docs["ids"][i])
+    if ids_to_delete:
+        db.delete(ids=ids_to_delete)
+
 
 def clear_pdf_by_user(user_id):
     """

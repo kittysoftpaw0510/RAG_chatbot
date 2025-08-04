@@ -1,6 +1,7 @@
 import os
 from fastapi import FastAPI
 from dotenv import load_dotenv
+from contextlib import asynccontextmanager
 
 from routes.admin import user_manage
 from routes.admin import data_manage
@@ -13,9 +14,20 @@ from routes.user import vectordb_manage as user_vectordb_manage
 from routes.user import user_manage as user_user_manage
 from routes.user import user_auth
 
-load_dotenv()
-app = FastAPI()
+from utils.sqlitedb import init_db
 
+load_dotenv()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup code
+    init_db()
+    print("FastAPI Server is starting up!")
+    yield
+    # Shutdown code
+    print("FastAPI Server is shutting down!")
+
+app = FastAPI(lifespan=lifespan)
 # Admin endpoint
 app.include_router(user_manage.router)
 app.include_router(data_manage.router)
